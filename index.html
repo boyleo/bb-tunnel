@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="refresh" content="0; url=https://denver-publishing-shortly-regime.trycloudflare.com">
+<meta http-equiv="refresh" content="10; url=https://denver-publishing-shortly-regime.trycloudflare.com">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Brainboard — redirecting…</title>
 <style>
@@ -28,18 +28,49 @@
     border: 3px solid #1e293b; border-top-color: #2563eb; animation: s 0.9s linear infinite;
   }
   @keyframes s { to { transform: rotate(360deg); } }
+  #status.warn { color: #fbbf24; }
+  #status.ok { color: #34d399; }
 </style>
 </head>
 <body>
   <div class="card">
-    <div class="spin" aria-hidden="true"></div>
+    <div class="spin" id="spin" aria-hidden="true"></div>
     <div class="mark" aria-hidden="true">🧠</div>
     <h1>Brainboard</h1>
-    <p>Redirecting you to the live board…</p>
-    <a class="cta" href="https://denver-publishing-shortly-regime.trycloudflare.com">Open the board →</a>
-    <p class="dim">This link always points at the current tunnel URL and updates automatically
-    whenever the host restarts its tunnel. If the board doesn't open, the host machine
-    may be asleep — check back in a moment.</p>
+    <p id="status">Checking the live board…</p>
+    <a class="cta" id="cta" href="https://denver-publishing-shortly-regime.trycloudflare.com">Open the board →</a>
+    <p class="dim">This link always points at the current tunnel URL.
+    Last updated: <span id="ts">2026-09-02 07:52 UTC</span>.
+    If the board doesn't open, the host machine may be asleep, or this page may be an old
+    copy — pull down / reload to get the latest.</p>
   </div>
+  <script>
+    // Redirect as soon as we can confirm the tunnel is alive; if it isn't,
+    // stay on this page and say why instead of throwing a connection error.
+    (function () {
+      var target = 'https://denver-publishing-shortly-regime.trycloudflare.com';
+      var status = document.getElementById('status');
+      var spin = document.getElementById('spin');
+      var t0 = Date.now();
+      function go() { location.replace(target); }
+      function check(again) {
+        fetch(target, { method: 'HEAD', mode: 'no-cors' })
+          .then(function () {
+            if (Date.now() - t0 < 2500) return;        // give the user a beat
+            status.textContent = 'Tunnel is up — redirecting…';
+            status.className = 'ok';
+            spin.style.display = 'none';
+            setTimeout(go, 400);
+          })
+          .catch(function () {
+            if (again) return check(false);            // one retry, then report
+            status.textContent = '⚠️ Can’t reach the tunnel right now. The host machine may be asleep, or this page may be stale (see “last updated” below) — reload this page and try again.';
+            status.className = 'warn';
+            spin.style.display = 'none';
+          });
+      }
+      setTimeout(function () { check(true); }, 1200);
+    })();
+  </script>
 </body>
 </html>
